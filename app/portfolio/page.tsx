@@ -152,7 +152,7 @@ export default function Portfolio() {
         "An efficient management application for Polibatam's general affairs division, featuring borrowing management, permissions, item tracking, and comprehensive reporting.",
       image: "/images/polibatam-poster.png",
       technologies: ["React", "Node JS", "PostgreSQL", "MUI", "Express"],
-      github: "https://github.com/ValuhkJv",
+      github: "https://github.com/ValuhkJv/pbl-if-02",
       longDescription:
         "The Polibatam General Subdivision Management Application is a software designed to assist in the management and administration of goods within Polibatam. This system aims to facilitate the management of goods, from requests and loans to stock management. This application will be used by several key actors, namely: SBUM staff, unit heads, units, and students.",
       features: [
@@ -191,7 +191,7 @@ export default function Portfolio() {
         "Payment Gateway",
         "Tailwind CSS",
       ],
-      github: "https://github.com/ValuhkJv",
+      github: "https://github.com/ValuhkJv/Film-Flix",
       longDescription:
         "Film Flix is a modern movie ticket booking platform that revolutionizes the cinema experience. Built with Laravel framework following MVC architecture, it provides users with an intuitive interface to browse movies, select seats, and purchase tickets online. The system includes advanced features like seat mapping, multiple payment options, and booking management.",
       features: [
