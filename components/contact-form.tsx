@@ -1,13 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { useActionState, useEffect, useRef } from "react";
 import { submitContactForm } from "../actions/contact";
 
 type ContactFormState = {
@@ -27,155 +20,87 @@ const initialState: ContactFormState = {
   errors: {},
 };
 
-export function ContactForm() {
-  const [state, formAction, isPending] = useActionState(
-    submitContactForm,
-    initialState
-  );
+const inputClass =
+  "w-full border-[3px] bg-black px-3.5 py-3 text-ink placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-50";
 
-  useEffect(() => {
-    if (state.success) {
-      // Reset form on successful submission
-      const form = document.getElementById("contact-form") as HTMLFormElement;
-      if (form) {
-        form.reset();
-      }
-    }
-  }, [state.success]);
+type FieldProps = {
+  name: keyof ContactFormState["errors"];
+  label: string;
+  errors?: string[];
+  disabled: boolean;
+} & (
+  | { multiline?: false; type: string; placeholder: string }
+  | { multiline: true; placeholder: string }
+);
+
+function Field(props: FieldProps) {
+  const { name, label, errors, disabled } = props;
+  const errorId = `${name}-error`;
+  const shared = {
+    id: name,
+    name,
+    required: true,
+    disabled,
+    placeholder: props.placeholder,
+    "aria-invalid": errors ? true : undefined,
+    "aria-describedby": errors ? errorId : undefined,
+    className: `${inputClass} ${errors ? "border-[#ff6b6b]" : "border-line"}`,
+  };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">
-          Send Me a Message
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form id="contact-form" action={formAction} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Your full name"
-                required
-                className={state.errors?.name ? "border-red-500" : ""}
-                disabled={isPending}
-              />
-              {state.errors?.name && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {state.errors.name[0]}
-                </p>
-              )}
-            </div>
+    <div className="flex flex-col gap-1.5 text-left">
+      <label htmlFor={name} className="text-sm text-muted">
+        {label}
+      </label>
+      {props.multiline ? (
+        <textarea rows={4} {...shared} className={`${shared.className} resize-y`} />
+      ) : (
+        <input type={props.type} {...shared} />
+      )}
+      {errors && (
+        <p id={errorId} className="text-[13px] text-[#ff8a8a]">
+          ✕ {errors[0]}
+        </p>
+      )}
+    </div>
+  );
+}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="your.email@example.com"
-                required
-                className={state.errors?.email ? "border-red-500" : ""}
-                disabled={isPending}
-              />
-              {state.errors?.email && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {state.errors.email[0]}
-                </p>
-              )}
-            </div>
-          </div>
+export function ContactForm() {
+  const [state, formAction, isPending] = useActionState(submitContactForm, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
-          <div className="space-y-2">
-            <Label htmlFor="subject">Subject *</Label>
-            <Input
-              id="subject"
-              name="subject"
-              type="text"
-              placeholder="What's this about?"
-              required
-              className={state.errors?.subject ? "border-red-500" : ""}
-              disabled={isPending}
-            />
-            {state.errors?.subject && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {state.errors.subject[0]}
-              </p>
-            )}
-          </div>
+  useEffect(() => {
+    if (state.success) formRef.current?.reset();
+  }, [state]);
 
-          <div className="space-y-2">
-            <Label htmlFor="message">Message *</Label>
-            <Textarea
-              id="message"
-              name="message"
-              placeholder="Tell me about your project, ideas, or just say hello!"
-              rows={6}
-              required
-              className={state.errors?.message ? "border-red-500" : ""}
-              disabled={isPending}
-            />
-            {state.errors?.message && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {state.errors.message[0]}
-              </p>
-            )}
-          </div>
+  return (
+    <form ref={formRef} action={formAction} className="flex w-full flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field name="name" label="PLAYER NAME" type="text" placeholder="Your name" errors={state.errors?.name} disabled={isPending} />
+        <Field name="email" label="EMAIL" type="email" placeholder="you@example.com" errors={state.errors?.email} disabled={isPending} />
+      </div>
+      <Field name="subject" label="SUBJECT" type="text" placeholder="Internship, freelance, collab…" errors={state.errors?.subject} disabled={isPending} />
+      <Field name="message" label="MESSAGE" multiline placeholder="Tell me about the next level we'll build together." errors={state.errors?.message} disabled={isPending} />
 
-          {state.message && (
-            <Alert
-              className={
-                state.success
-                  ? "border-green-500 bg-green-50 dark:bg-green-950"
-                  : "border-red-500 bg-red-50 dark:bg-red-950"
-              }
-            >
-              <div className="flex items-center gap-2">
-                {state.success ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                )}
-                <AlertDescription
-                  className={
-                    state.success
-                      ? "text-green-700 dark:text-green-300"
-                      : "text-red-700 dark:text-red-300"
-                  }
-                >
-                  {state.message}
-                </AlertDescription>
-              </div>
-            </Alert>
-          )}
+      {state.message && (
+        <p
+          role="status"
+          className={`border-[3px] px-4 py-3 text-left text-sm ${
+            state.success ? "border-accent text-accent" : "border-[#ff6b6b] text-[#ff8a8a]"
+          }`}
+        >
+          {state.message}
+        </p>
+      )}
 
-          <Button
-            type="submit"
-            disabled={isPending}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Send Message
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="h-[52px] cursor-pointer self-start bg-accent px-6 font-mono text-xs text-black shadow-[4px_4px_0_#3a3a3a] disabled:cursor-wait disabled:opacity-60"
+      >
+        {isPending ? "SENDING…" : "▶ SEND MESSAGE"}
+      </button>
+    </form>
   );
 }
